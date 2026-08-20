@@ -19,6 +19,17 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selected, setSelected] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("paatram-theme");
+    if (savedTheme === "dark") setTheme("dark");
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("paatram-theme", theme);
+    document.documentElement.dataset.catalogueTheme = theme;
+  }, [theme]);
 
   useEffect(() => {
     fetch("/api/products")
@@ -33,9 +44,20 @@ export default function Home() {
   }, [selected]);
 
   return (
-    <main className="catalogue-shell">
+    <main className={`catalogue-shell ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
       <header className="hero">
         <span className="eyebrow">Pāatram</span>
+        <button
+          className="theme-toggle"
+          type="button"
+          role="switch"
+          aria-checked={theme === "dark"}
+          aria-label={theme === "dark" ? "Switch to the light theme" : "Switch to the dark rosemary theme"}
+          onClick={() => setTheme((current) => current === "light" ? "dark" : "light")}
+        >
+          <span className="theme-toggle-track" aria-hidden="true"><i /></span>
+          <span className="theme-toggle-label">{theme === "dark" ? "Light" : "Rosemary"}</span>
+        </button>
         <h1>Objects for everyday rituals.</h1>
         <p>Thoughtfully made tableware, shaped by Indian craft.</p>
       </header>

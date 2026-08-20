@@ -2,14 +2,23 @@
 
 :root { --ink: #26241f; --paper: #f4f0e7; --muted: #777267; --line: rgba(38, 36, 31, 0.14); --clay: #9d5e42; }
 * { box-sizing: border-box; }
-html { background: #ddd7ca; }
+html { background: #ddd7ca; transition: background-color .35s ease; }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
 button { font: inherit; }
-.catalogue-shell { width: 100%; min-height: 100dvh; margin: 0 auto; overflow: hidden; background: radial-gradient(circle at 92% 2%, rgba(157,94,66,.12), transparent 24rem), var(--paper); }
-.hero { padding: 36px 20px 32px; }
+.catalogue-shell { width: 100%; min-height: 100dvh; margin: 0 auto; overflow: hidden; color: var(--ink); background: radial-gradient(circle at 92% 2%, rgba(157,94,66,.12), transparent 24rem), var(--paper); transition: color .4s ease, background .4s ease; }
+.catalogue-shell.theme-dark { --ink: #fff4f6; --paper: #220a15; --muted: #efc8d0; --line: rgba(183,110,121,.38); --clay: #b76e79; color-scheme: dark; background: radial-gradient(circle at 88% -5%, rgba(183,110,121,.18), transparent 26rem), radial-gradient(circle at -10% 48%, rgba(90,33,55,.34), transparent 24rem), repeating-linear-gradient(135deg, rgba(255,244,246,.012) 0, rgba(255,244,246,.012) 1px, transparent 1px, transparent 5px), linear-gradient(155deg, #321120 0%, #220a15 54%, #170911 100%); }
+html[data-catalogue-theme="dark"], html[data-catalogue-theme="dark"] body { background: #170911; }
+.hero { position: relative; padding: 36px 20px 32px; }
 .eyebrow { display: block; color: var(--clay); font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; }
 .hero h1 { max-width: 330px; margin: 42px 0 12px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(42px, 12vw, 60px); font-weight: 400; line-height: .96; letter-spacing: -.045em; }
 .hero p { max-width: 300px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.theme-toggle { position: absolute; top: 25px; right: 18px; display: grid; grid-template-columns: 38px auto; align-items: center; gap: 7px; min-height: 36px; padding: 5px 9px 5px 6px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.34); color: var(--muted); cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color .3s ease, border-color .3s ease, background .3s ease; }
+.theme-toggle-track { position: relative; display: block; width: 38px; height: 22px; border-radius: 999px; background: #d8d0c1; box-shadow: inset 0 0 0 1px rgba(38,36,31,.08); transition: background .3s ease; }
+.theme-toggle-track i { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fffdf7; box-shadow: 0 2px 5px rgba(38,36,31,.18); transition: transform .3s cubic-bezier(.2,.8,.2,1), background .3s ease; }
+.theme-toggle-label { min-width: 26px; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.theme-dark .theme-toggle { background: rgba(31,9,19,.68); color: #efc8d0; border-color: rgba(183,110,121,.38); }
+.theme-dark .theme-toggle-track { background: #5a2137; box-shadow: inset 0 0 0 1px rgba(239,200,208,.25); }
+.theme-dark .theme-toggle-track i { background: linear-gradient(145deg, #fff4f6, #b76e79); box-shadow: 0 0 9px rgba(183,110,121,.55); transform: translateX(16px); }
 .collection { padding: 16px 14px 32px; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; padding: 0 6px 14px; border-bottom: 1px solid var(--line); }
 .section-heading h2 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -22,8 +31,13 @@ button { font: inherit; }
 .product-copy { display: block; padding: 10px 5px 0; }
 .product-copy strong { display: block; font-family: Georgia, serif; font-size: 16px; font-weight: 400; line-height: 1.18; }
 .product-copy > span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+.theme-dark .image-wrap { background: #321120; box-shadow: inset 0 0 0 1px rgba(183,110,121,.18); }
+.theme-dark .image-wrap img { filter: saturate(.9) contrast(1.04); }
+.theme-dark .product-copy strong { color: #fff4f6; }
 .product-placeholder span { display: block; aspect-ratio: 4 / 5; background: linear-gradient(110deg, #e1dbcf 20%, #eee9df 35%, #e1dbcf 50%); background-size: 220% 100%; animation: shimmer 1.4s linear infinite; }
 .product-placeholder i { display: block; width: 70%; height: 13px; margin: 11px 5px 0; background: #e1dbcf; }
+.theme-dark .product-placeholder span { background: linear-gradient(110deg, #220a15 20%, #5a2137 35%, #220a15 50%); background-size: 220% 100%; }
+.theme-dark .product-placeholder i { background: #321120; }
 .empty-state { padding: 50px 10px 72px; color: var(--muted); font-family: Georgia, serif; font-style: italic; text-align: center; }
 footer { margin: 0 20px; padding: 30px 0 44px; border-top: 1px solid var(--line); color: var(--muted); font-family: Georgia, serif; font-size: 14px; font-style: italic; text-align: center; }
 .detail-overlay { position: fixed; z-index: 20; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgba(20, 19, 17, .52); backdrop-filter: blur(4px); animation: fade-in .2s ease; }
@@ -37,6 +51,9 @@ footer { margin: 0 20px; padding: 30px 0 44px; border-top: 1px solid var(--line)
 .detail-copy dl div { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .detail-copy dt { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 .detail-copy dd { margin: 0; font-size: 13px; line-height: 1.45; }
+.theme-dark .detail-overlay { background: rgba(6, 1, 3, .76); }
+.theme-dark .detail-sheet { background: linear-gradient(160deg, #321120, #220a15 65%); border-top: 1px solid rgba(183,110,121,.38); box-shadow: 0 -20px 60px rgba(0,0,0,.46); }
+.theme-dark .close-button { border: 1px solid rgba(183,110,121,.38); background: rgba(31,9,19,.9); color: #fff4f6; }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes rise { from { transform: translateY(28px); opacity: .8; } }
 @keyframes shimmer { to { background-position-x: -220%; } }
@@ -62,5 +79,12 @@ footer { margin: 0 20px; padding: 30px 0 44px; border-top: 1px solid var(--line)
 .admin-product strong { display: block; font-family: Georgia, serif; font-size: 15px; font-weight: 400; }
 .admin-product span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
 .admin-product button { padding: 8px 0 8px 10px; border: 0; background: none; color: #a74c3d; font-size: 11px; }
+.admin-topline { display: flex; align-items: center; justify-content: space-between; }
+.admin-logout { padding: 7px 0 7px 12px; border: 0; background: none; color: var(--muted); font-size: 11px; }
+.admin-loading { display: grid; min-height: 100dvh; place-items: center; color: var(--muted); font-family: Georgia, serif; }
+.admin-login { display: grid; min-height: 100dvh; align-items: center; }
+.admin-login > section { width: 100%; }
+.admin-login h1 { margin: 18px 0 8px; font-family: Georgia, serif; font-size: 38px; font-weight: 400; letter-spacing: -.035em; }
+.admin-login > section > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 @media (min-width: 560px) { body { background: #d9d2c5; } .catalogue-shell { max-width: 480px; box-shadow: 0 0 70px rgba(38,36,31,.1); } .detail-sheet { max-width: 480px; } }
 @media (min-width: 820px) { body::before { content: "This catalogue is designed for mobile. Scan the Pāatram QR code with your phone."; position: fixed; left: 40px; top: 50%; width: 230px; color: #6f695f; font-family: Georgia, serif; font-size: 18px; line-height: 1.4; transform: translateY(-50%); } }

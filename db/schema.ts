@@ -1,6 +1,6 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-export const products = sqliteTable("products", {
+export const products = pgTable("products", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   pricePaise: integer("price_paise").notNull(),
@@ -8,7 +8,7 @@ export const products = sqliteTable("products", {
   size: text("size").notNull(),
   care: text("care").notNull(),
   imageUrl: text("image_url").notNull(),
-  available: integer("available", { mode: "boolean" }).notNull().default(true),
+  available: boolean("available").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
-  createdAt: text("created_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,7 +1,10 @@
-/**
- * Database adapter placeholder for the Vercel deployment.
- * The persistent provider will be connected in the backend setup step.
- */
-export function getDb(): never {
-  throw new Error("Vercel database is not configured yet.");
+import { neon } from "@neondatabase/serverless";
+
+let databaseClient: ReturnType<typeof neon> | null = null;
+
+export function getSql() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL is not configured.");
+  databaseClient ??= neon(databaseUrl);
+  return databaseClient;
 }

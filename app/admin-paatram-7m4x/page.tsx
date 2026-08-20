@@ -2,8 +2,6 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
-const ADMIN_KEY = "paatram-studio-7m4x";
-
 type Product = {
   id: string;
   name: string;
@@ -16,16 +14,50 @@ type Product = {
 };
 
 export default function AdminPage() {
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
   const loadProducts = useCallback(async () => {
-    const response = await fetch("/api/products?all=1", { headers: { "x-paatram-admin": ADMIN_KEY } });
+    const response = await fetch("/api/products?all=1", { cache: "no-store" });
     if (response.ok) setProducts(await response.json());
+    else if (response.status === 401) setAuthenticated(false);
   }, []);
 
-  useEffect(() => { void loadProducts(); }, [loadProducts]);
+  useEffect(() => {
+    fetch("/api/admin/session", { cache: "no-store" }).then((response) => {
+      setAuthenticated(response.ok);
+      if (response.ok) void loadProducts();
+    }).catch(() => setAuthenticated(false));
+  }, [loadProducts]);
+
+  async function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const form = event.currentTarget;
+    const password = new FormData(form).get("password");
+    try {
+      const response = await fetch("/api/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Could not sign in.");
+      form.reset();
+      setAuthenticated(true);
+      await loadProducts();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not sign in.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signOut() {
+    await fetch("/api/admin/session", { method: "DELETE" });
+    setAuthenticated(false);
+    setProducts([]);
+    setMessage("");
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,13 +69,13 @@ export default function AdminPage() {
       const image = data.get("image") as File;
       const upload = new FormData();
       upload.append("image", image);
-      const uploadResponse = await fetch("/api/media", { method: "POST", headers: { "x-paatram-admin": ADMIN_KEY }, body: upload });
+      const uploadResponse = await fetch("/api/media", { method: "POST", body: upload });
       const uploadResult = await uploadResponse.json() as { url?: string; error?: string };
       if (!uploadResponse.ok || !uploadResult.url) throw new Error(uploadResult.error || "Image upload failed.");
 
       const response = await fetch("/api/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-paatram-admin": ADMIN_KEY },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: data.get("name"),
           pricePaise: Number(data.get("price")) * 100,
@@ -57,7 +89,7 @@ export default function AdminPage() {
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Could not add product.");
       form.reset();
-      setMessage("Product added to the catalogue.");
+      setMessage("Product added to the live catalogue.");
       await loadProducts();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Something went wrong.");
@@ -68,13 +100,36 @@ export default function AdminPage() {
 
   async function remove(product: Product) {
     if (!window.confirm(`Remove ${product.name} from the catalogue?`)) return;
-    const response = await fetch(`/api/products/${encodeURIComponent(product.id)}`, { method: "DELETE", headers: { "x-paatram-admin": ADMIN_KEY } });
+    const response = await fetch(`/api/products/${encodeURIComponent(product.id)}`, { method: "DELETE" });
     if (response.ok) setProducts((items) => items.filter((item) => item.id !== product.id));
+    else setMessage("Could not remove this product.");
+  }
+
+  if (authenticated === null) return <main className="admin-shell admin-loading">Opening Pāatram Studio…</main>;
+
+  if (!authenticated) {
+    return (
+      <main className="admin-shell admin-login">
+        <section>
+          <span className="eyebrow">Pāatram studio</span>
+          <h1>Admin access</h1>
+          <p>Enter the studio password to manage the live catalogue.</p>
+          <form className="admin-form" onSubmit={signIn}>
+            <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
+            <button className="admin-submit" disabled={busy}>{busy ? "Signing in…" : "Enter studio"}</button>
+            {message && <p className="form-message" role="alert">{message}</p>}
+          </form>
+        </section>
+      </main>
+    );
   }
 
   return (
     <main className="admin-shell">
-      <header className="admin-header"><span className="eyebrow">Pāatram studio</span><h1>Catalogue manager</h1><p>Add products here. This page is separate from the customer catalogue.</p></header>
+      <header className="admin-header">
+        <div className="admin-topline"><span className="eyebrow">Pāatram studio</span><button className="admin-logout" onClick={() => void signOut()}>Sign out</button></div>
+        <h1>Catalogue manager</h1><p>Add products here. Changes appear immediately in the customer catalogue.</p>
+      </header>
       <form className="admin-form" onSubmit={submit}>
         <label><span>Product photo</span><input name="image" type="file" accept="image/*" required /></label>
         <label><span>Item name</span><input name="name" placeholder="e.g. Kansa Serving Bowl" required /></label>
