@@ -30,7 +30,9 @@ export async function POST(request: Request) {
       care: String(input.care).trim(),
       imageUrl: String(input.imageUrl).trim(),
       available: input.available !== false,
-      sortOrder: Number(input.sortOrder) || Date.now(),
+      // PostgreSQL INTEGER is 32-bit; Date.now() in milliseconds overflows it.
+      // Minute precision keeps newly added products ordered and safely in range.
+      sortOrder: Number(input.sortOrder) || Math.floor(Date.now() / 60_000),
     });
     return Response.json(product, { status: 201 });
   } catch {
