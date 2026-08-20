@@ -15,6 +15,8 @@ type Product = {
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+  const [accessMode, setAccessMode] = useState<"signin" | "signup">("signin");
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -26,9 +28,13 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/admin/session", { cache: "no-store" }).then((response) => {
-      setAuthenticated(response.ok);
-      if (response.ok) void loadProducts();
+    fetch("/api/admin/session", { cache: "no-store" }).then(async (response) => {
+      const result = await response.json() as { authenticated?: boolean; registrationOpen?: boolean; error?: string };
+      setAuthenticated(Boolean(result.authenticated));
+      setRegistrationOpen(Boolean(result.registrationOpen));
+      if (result.registrationOpen) setAccessMode("signup");
+      if (result.error) setMessage(result.error);
+      if (result.authenticated) void loadProducts();
     }).catch(() => setAuthenticated(false));
   }, [loadProducts]);
 
@@ -37,9 +43,9 @@ export default function AdminPage() {
     setBusy(true);
     setMessage("");
     const form = event.currentTarget;
-    const password = new FormData(form).get("password");
+    const data = new FormData(form);
     try {
-      const response = await fetch("/api/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+      const response = await fetch("/api/admin/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: data.get("email"), password: data.get("password") }) });
       const result = await response.json() as { error?: string };
       if (!response.ok) throw new Error(result.error || "Could not sign in.");
       form.reset();
@@ -47,6 +53,31 @@ export default function AdminPage() {
       await loadProducts();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not sign in.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signUp(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    try {
+      const response = await fetch("/api/admin/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: data.get("name"), email: data.get("email"), password: data.get("password") }),
+      });
+      const result = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(result.error || "Could not create account.");
+      form.reset();
+      setRegistrationOpen(false);
+      setAuthenticated(true);
+      await loadProducts();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not create account.");
     } finally {
       setBusy(false);
     }
@@ -112,13 +143,31 @@ export default function AdminPage() {
       <main className="admin-shell admin-login">
         <section>
           <span className="eyebrow">Pāatram studio</span>
-          <h1>Admin access</h1>
-          <p>Enter the studio password to manage the live catalogue.</p>
-          <form className="admin-form" onSubmit={signIn}>
-            <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
-            <button className="admin-submit" disabled={busy}>{busy ? "Signing in…" : "Enter studio"}</button>
-            {message && <p className="form-message" role="alert">{message}</p>}
-          </form>
+          <h1>{accessMode === "signup" ? "Create admin account" : "Admin sign in"}</h1>
+          <p>{accessMode === "signup" ? "Set up the first secure account for this catalogue." : "Sign in to manage products and images."}</p>
+          {registrationOpen && (
+            <div className="auth-tabs" role="tablist" aria-label="Admin access options">
+              <button role="tab" aria-selected={accessMode === "signin"} onClick={() => { setAccessMode("signin"); setMessage(""); }}>Sign in</button>
+              <button role="tab" aria-selected={accessMode === "signup"} onClick={() => { setAccessMode("signup"); setMessage(""); }}>Sign up</button>
+            </div>
+          )}
+          {accessMode === "signup" && registrationOpen ? (
+            <form className="admin-form" onSubmit={signUp}>
+              <label><span>Name</span><input name="name" autoComplete="name" required /></label>
+              <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
+              <label><span>Password</span><input name="password" type="password" minLength={10} autoComplete="new-password" required /></label>
+              <p className="password-hint">Use at least 10 characters.</p>
+              <button className="admin-submit" disabled={busy}>{busy ? "Creating account…" : "Create admin account"}</button>
+              {message && <p className="form-message" role="alert">{message}</p>}
+            </form>
+          ) : (
+            <form className="admin-form" onSubmit={signIn}>
+              <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
+              <label><span>Password</span><input name="password" type="password" autoComplete="current-password" required /></label>
+              <button className="admin-submit" disabled={busy}>{busy ? "Signing in…" : "Enter studio"}</button>
+              {message && <p className="form-message" role="alert">{message}</p>}
+            </form>
+          )}
         </section>
       </main>
     );

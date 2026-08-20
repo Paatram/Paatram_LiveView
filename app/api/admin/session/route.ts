@@ -1,17 +1,25 @@
-import { clearSessionCookie, createSessionCookie, isAdmin, passwordIsValid } from "../../../../lib/admin-auth";
+import { findAdminByEmail, registrationIsOpen } from "../../../../db/admins";
+import { clearSessionCookie, createSessionCookie, isAdmin, verifyPassword } from "../../../../lib/admin-auth";
 
 export async function GET(request: Request) {
-  return Response.json({ authenticated: await isAdmin(request) }, { status: await isAdmin(request) ? 200 : 401 });
+  const authenticated = await isAdmin(request);
+  try {
+    return Response.json({ authenticated, registrationOpen: authenticated ? false : await registrationIsOpen() });
+  } catch {
+    return Response.json({ authenticated, registrationOpen: false, error: "Admin database is unavailable." }, { status: authenticated ? 200 : 503 });
+  }
 }
 
 export async function POST(request: Request) {
   try {
-    const input = await request.json() as { password?: string };
-    if (!input.password || !(await passwordIsValid(input.password))) return Response.json({ error: "Incorrect password." }, { status: 401 });
-    return Response.json({ authenticated: true }, { headers: { "Set-Cookie": await createSessionCookie() } });
-  } catch (error) {
-    const message = error instanceof Error && error.message.includes("configured") ? "Admin access is not configured yet." : "Could not sign in.";
-    return Response.json({ error: message }, { status: 503 });
+    const input = await request.json() as { email?: string; password?: string };
+    const admin = input.email ? await findAdminByEmail(input.email.trim().toLowerCase()) : null;
+    if (!admin || !input.password || !(await verifyPassword(input.password, admin.passwordHash, admin.passwordSalt))) {
+      return Response.json({ error: "Incorrect email or password." }, { status: 401 });
+    }
+    return Response.json({ authenticated: true }, { headers: { "Set-Cookie": await createSessionCookie(admin.id) } });
+  } catch {
+    return Response.json({ error: "Admin sign-in is temporarily unavailable." }, { status: 503 });
   }
 }
 
