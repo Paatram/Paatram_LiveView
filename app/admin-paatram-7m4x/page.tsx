@@ -145,18 +145,17 @@ export default function AdminPage() {
           <span className="eyebrow">Pāatram studio</span>
           <h1>{accessMode === "signup" ? "Create admin account" : "Admin sign in"}</h1>
           <p>{accessMode === "signup" ? "Set up the first secure account for this catalogue." : "Sign in to manage products and images."}</p>
-          {registrationOpen && (
-            <div className="auth-tabs" role="tablist" aria-label="Admin access options">
-              <button role="tab" aria-selected={accessMode === "signin"} onClick={() => { setAccessMode("signin"); setMessage(""); }}>Sign in</button>
-              <button role="tab" aria-selected={accessMode === "signup"} onClick={() => { setAccessMode("signup"); setMessage(""); }}>Sign up</button>
-            </div>
-          )}
-          {accessMode === "signup" && registrationOpen ? (
+          <div className="auth-tabs" role="tablist" aria-label="Admin access options">
+            <button role="tab" aria-selected={accessMode === "signin"} onClick={() => { setAccessMode("signin"); setMessage(""); }}>Sign in</button>
+            <button role="tab" aria-selected={accessMode === "signup"} onClick={() => { setAccessMode("signup"); setMessage(""); }}>Sign up</button>
+          </div>
+          {accessMode === "signup" ? (
             <form className="admin-form" onSubmit={signUp}>
               <label><span>Name</span><input name="name" autoComplete="name" required /></label>
               <label><span>Email</span><input name="email" type="email" autoComplete="email" required /></label>
               <label><span>Password</span><input name="password" type="password" minLength={10} autoComplete="new-password" required /></label>
               <p className="password-hint">Use at least 10 characters.</p>
+              {!registrationOpen && <p className="password-hint">Sign-up is only accepted when no admin account exists.</p>}
               <button className="admin-submit" disabled={busy}>{busy ? "Creating account…" : "Create admin account"}</button>
               {message && <p className="form-message" role="alert">{message}</p>}
             </form>
