@@ -30,7 +30,7 @@ html[data-catalogue-theme="dark"], html[data-catalogue-theme="dark"] body { back
 .product-card:active .image-wrap img { transform: scale(.98); }
 .product-copy { display: block; padding: 10px 5px 0; }
 .product-copy strong { display: block; font-family: Georgia, serif; font-size: 16px; font-weight: 400; line-height: 1.18; }
-.product-copy > span { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; }
+.product-copy > span { display: block; margin-top: 6px; color: var(--muted); font-size: 15px; line-height: 1.2; }
 .theme-dark .image-wrap { background: #321120; box-shadow: inset 0 0 0 1px rgba(183,110,121,.18); }
 .theme-dark .image-wrap img { filter: saturate(.9) contrast(1.04); }
 .theme-dark .product-copy strong { color: #fff4f6; }
@@ -46,7 +46,7 @@ footer { margin: 0 20px; padding: 30px 0 44px; border-top: 1px solid var(--line)
 .close-button { position: absolute; z-index: 2; top: 12px; right: 12px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(244,240,231,.9); color: var(--ink); font-size: 26px; line-height: 1; }
 .detail-copy { padding: 24px 20px 34px; }
 .detail-copy h2 { margin: 12px 0 4px; font-family: Georgia, serif; font-size: 32px; font-weight: 400; letter-spacing: -.03em; }
-.detail-price { margin: 0 0 26px; color: var(--clay); font-size: 15px; }
+.detail-price { margin: 0 0 26px; color: var(--clay); font-size: 20px; line-height: 1.2; }
 .detail-copy dl { margin: 0; border-top: 1px solid var(--line); }
 .detail-copy dl div { display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .detail-copy dt { color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
@@ -80,7 +80,10 @@ footer { margin: 0 20px; padding: 30px 0 44px; border-top: 1px solid var(--line)
 .admin-product span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
 .admin-product button { padding: 8px 0 8px 10px; border: 0; background: none; color: #a74c3d; font-size: 11px; }
 .admin-topline { display: flex; align-items: center; justify-content: space-between; }
+.admin-actions { display: flex; align-items: center; gap: 12px; }
+.admin-install { min-height: 34px; padding: 0 12px; border: 1px solid #d5cfc4; border-radius: 999px; background: #fff; color: var(--ink); font-size: 11px; font-weight: 700; }
 .admin-logout { padding: 7px 0 7px 12px; border: 0; background: none; color: var(--muted); font-size: 11px; }
+.admin-header .install-message { margin-top: 12px; color: var(--clay); font-size: 12px; }
 .admin-loading { display: grid; min-height: 100dvh; place-items: center; color: var(--muted); font-family: Georgia, serif; }
 .admin-login { display: grid; min-height: 100dvh; align-items: center; }
 .admin-login > section { width: 100%; }

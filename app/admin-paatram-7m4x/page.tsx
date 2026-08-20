@@ -13,6 +13,11 @@ type Product = {
   available: boolean;
 };
 
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [registrationOpen, setRegistrationOpen] = useState(false);
@@ -20,6 +25,11 @@ export default function AdminPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [standalone, setStandalone] = useState(() => typeof window !== "undefined" && (
+    window.matchMedia("(display-mode: standalone)").matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+  ));
+  const [installMessage, setInstallMessage] = useState("");
 
   const loadProducts = useCallback(async () => {
     const response = await fetch("/api/products?all=1", { cache: "no-store" });
@@ -37,6 +47,36 @@ export default function AdminPage() {
       if (result.authenticated) void loadProducts();
     }).catch(() => setAuthenticated(false));
   }, [loadProducts]);
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) void navigator.serviceWorker.register("/admin-sw.js");
+    const captureInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    };
+    const markInstalled = () => {
+      setStandalone(true);
+      setInstallPrompt(null);
+      setInstallMessage("");
+    };
+    window.addEventListener("beforeinstallprompt", captureInstallPrompt);
+    window.addEventListener("appinstalled", markInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", captureInstallPrompt);
+      window.removeEventListener("appinstalled", markInstalled);
+    };
+  }, []);
+
+  async function installApp() {
+    if (installPrompt) {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === "accepted") setStandalone(true);
+      setInstallPrompt(null);
+      return;
+    }
+    setInstallMessage("On iPhone, tap Share, then choose Add to Home Screen.");
+  }
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -175,8 +215,15 @@ export default function AdminPage() {
   return (
     <main className="admin-shell">
       <header className="admin-header">
-        <div className="admin-topline"><span className="eyebrow">Pāatram studio</span><button className="admin-logout" onClick={() => void signOut()}>Sign out</button></div>
+        <div className="admin-topline">
+          <span className="eyebrow">Pāatram studio</span>
+          <div className="admin-actions">
+            {!standalone && <button className="admin-install" type="button" onClick={() => void installApp()}>Install app</button>}
+            <button className="admin-logout" onClick={() => void signOut()}>Sign out</button>
+          </div>
+        </div>
         <h1>Catalogue manager</h1><p>Add products here. Changes appear immediately in the customer catalogue.</p>
+        {installMessage && <p className="install-message" role="status">{installMessage}</p>}
       </header>
       <form className="admin-form" onSubmit={submit}>
         <label><span>Product photo</span><input name="image" type="file" accept="image/*" required /></label>
